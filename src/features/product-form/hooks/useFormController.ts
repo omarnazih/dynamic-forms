@@ -7,22 +7,21 @@ import {
     FormEvents,
 } from '../types';
 import { FormSchemaType, buildStepValidation } from '../utils/validationUtils';
-import { submitFormData } from '../services/formService';
 
 interface UseFormControllerProps {
-    formSchema: FormSchema;
+    schema: FormSchema;
     events?: FormEvents;
 }
 
 export function useFormController({
-    formSchema,
+    schema,
     events = {},
 }: UseFormControllerProps) {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [formData, setFormData] = useState<FormState>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const steps = formSchema.form_steps;
+    const steps = schema.form_steps;
     const currentStep = steps[currentStepIndex];
     const isFirstStep = currentStepIndex === 0;
     const isLastStep = currentStepIndex === steps.length - 1;
@@ -42,11 +41,25 @@ export function useFormController({
             Object.entries(formData).filter(([key]) => stepFields.includes(key))
         );
 
-        form.reset(stepData);
+        form.reset(stepData, { keepValues: false, keepDirty: false });
     }, [currentStepIndex, currentStep, form, formData]);
 
-    const next = () => {
+    const validateCurrentStep = async (): Promise<boolean> => {
+        const result = await form.trigger();
+        return result;
+    };
+
+    const next = async () => {
+        const isValid = await validateCurrentStep();
+
+        if (!isValid) {
+            return;
+        }
+
         if (currentStepIndex < steps.length - 1) {
+            const currentValues = form.getValues();
+            setFormData(prev => ({ ...prev, ...currentValues }));
+
             const prevStep = currentStepIndex;
             const nextStep = currentStepIndex + 1;
 
@@ -60,6 +73,9 @@ export function useFormController({
 
     const back = () => {
         if (currentStepIndex > 0) {
+            const currentValues = form.getValues();
+            setFormData(prev => ({ ...prev, ...currentValues }));
+
             const prevStep = currentStepIndex;
             const nextStep = currentStepIndex - 1;
 
@@ -86,42 +102,23 @@ export function useFormController({
         }
 
         if (isLastStep) {
-            await handleFinalSubmit(updatedFormData);
+            if (events.onFinalSubmit) {
+                setIsSubmitting(true);
+                try {
+                    await events.onFinalSubmit(updatedFormData);
+                } catch (error) {
+                    console.error('Error during form submission:', error);
+                    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+
+                    if (events.onSubmitError) {
+                        events.onSubmitError(errorMessage);
+                    }
+                } finally {
+                    setIsSubmitting(false);
+                }
+            }
         } else {
             next();
-        }
-    };
-
-    const handleFinalSubmit = async (formData: FormState) => {
-        try {
-            setIsSubmitting(true);
-
-            const result = await submitFormData(formData, ` `);
-
-            if (result.success) {
-                if (events.onSubmitSuccess) {
-                    events.onSubmitSuccess(result);
-                } else {
-                    alert('Form submitted successfully!');
-                }
-            } else {
-                if (events.onSubmitError && result.error) {
-                    events.onSubmitError(result.error);
-                } else {
-                    alert(`Form submission failed: ${result.error}`);
-                }
-            }
-        } catch (error) {
-            console.error('Error submitting form:', error);
-            const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-
-            if (events.onSubmitError) {
-                events.onSubmitError(errorMessage);
-            } else {
-                alert('An unexpected error occurred while submitting the form.');
-            }
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -134,7 +131,6 @@ export function useFormController({
         isLastStep,
         progress,
         isSubmitting,
-        next,
         back,
         handleCancel,
         onSubmit

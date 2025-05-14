@@ -8,8 +8,7 @@ import { FormSchema, FormState, FormSubmissionResult, FormConfig } from '@/featu
 import { submitFormData } from '@/features/product-form/services/formService';
 
 export default function Home() {
-  const [formSchema, setFormSchema] = useState<FormSchema | null>(null);
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [schema, setSchema] = useState<FormSchema | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submissionResult, setSubmissionResult] = useState<FormSubmissionResult | null>(null);
@@ -18,9 +17,8 @@ export default function Home() {
     const loadFormDataAsync = async () => {
       try {
         setIsLoading(true);
-        // Load form schema
-        const schema = await getFormSchema();
-        setFormSchema(schema);
+        const formSchema = await getFormSchema();
+        setSchema(formSchema);
       } catch (err) {
         setError('Failed to load form schema. Please try again later.');
         console.error(err);
@@ -34,7 +32,6 @@ export default function Home() {
 
   const handleFormSubmit = (data: FormState) => {
     console.log('Form data updated:', data);
-    setFormData(data);
   };
 
   const handleFinalSubmit = async (data: FormState) => {
@@ -58,10 +55,13 @@ export default function Home() {
     setError(error);
   };
 
+  const handleReset = () => {
+    setSubmissionResult(null);
+    setError(null);
+  };
 
-  // Form configuration
   const formConfig: FormConfig = {
-    submitButtonText: 'Submit Product',
+    submitButtonText: 'Submit',
     nextButtonText: 'Continue',
     backButtonText: 'Previous',
     showProgressBar: true,
@@ -86,25 +86,32 @@ export default function Home() {
           </Card>
         )}
 
-        {!isLoading && (error || !formSchema) && (
+        {!isLoading && (error || !schema) && (
           <Card className="w-full max-w-3xl mx-auto">
             <CardContent className="pt-6">
               <div className="flex justify-center items-center h-64">
                 <p className="text-red-500">{error || 'An error occurred.'}</p>
+                {error && (
+                  <button
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    onClick={handleReset}
+                  >
+                    Try Again
+                  </button>
+                )}
               </div>
             </CardContent>
           </Card>
         )}
 
-        {!isLoading && !error && formSchema && !submissionResult && (
+        {!isLoading && !error && schema && !submissionResult && (
           <FormRenderer
-            formSchema={formSchema}
-            initialData={formData}
+            schema={schema}
             events={{
               onSubmit: handleFormSubmit,
               onFinalSubmit: handleFinalSubmit,
               onSubmitError: handleSubmitError,
-              onSubmitSuccess: handleSubmitSuccess,
+              onSubmitSuccess: handleSubmitSuccess
             }}
             config={formConfig}
             formId="product-form"
@@ -117,12 +124,9 @@ export default function Home() {
               <div className="flex flex-col justify-center items-center h-64">
                 <h2 className="text-2xl font-bold text-green-600 mb-4">Form Submitted Successfully!</h2>
                 <p>Thank you for your submission.</p>
-                <button
+                <button 
                   className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  onClick={() => {
-                    setSubmissionResult(null);
-                    setFormData({});
-                  }}
+                  onClick={handleReset}
                 >
                   Submit Another Product
                 </button>

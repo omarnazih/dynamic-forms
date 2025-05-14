@@ -1,6 +1,7 @@
 import { CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { formatName } from '../utils/formUtils';
 
 interface FormHeaderProps {
     formName: string;
@@ -24,7 +25,9 @@ export const FormHeader = ({
     return (
         <CardHeader className={cn(className)}>
             <CardTitle className="text-center">
-                {formName.replace(/_/g, ' ')}
+                <h1 className="text-2xl font-bold">
+                    {formatName(formName)}
+                </h1>
             </CardTitle>
             {showProgressBar && (
                 <div className="mt-2">

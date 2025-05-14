@@ -63,13 +63,11 @@ export interface FormEvents {
     onFinalSubmit?: (data: FormState) => Promise<void>;
 }
 
-// Configuration options for the form
 export interface FormConfig {
     submitButtonText?: string;
     nextButtonText?: string;
     backButtonText?: string;
     showProgressBar?: boolean;
-    allowNavigation?: boolean;
     showStepIndicator?: boolean;
     customClassNames?: {
         form?: string;
@@ -83,8 +81,6 @@ export interface FormConfig {
 
 export interface FormIntegrationProps {
     formId?: string;
-    initialData?: FormState;
     events?: FormEvents;
     config?: FormConfig;
-    customFormUrl?: string;
 } 
