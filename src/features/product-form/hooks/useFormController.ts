@@ -7,6 +7,7 @@ import {
     FormEvents,
 } from '../types';
 import { FormSchemaType, buildStepValidation } from '../utils/validationUtils';
+import { ERROR_MESSAGES } from '@/config/form.config';
 
 interface UseFormControllerProps {
     schema: FormSchema;
@@ -108,7 +109,7 @@ export function useFormController({
                     await events.onFinalSubmit(updatedFormData);
                 } catch (error) {
                     console.error('Error during form submission:', error);
-                    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+                    const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNEXPECTED_ERROR;
 
                     if (events.onSubmitError) {
                         events.onSubmitError(errorMessage);

@@ -18,17 +18,15 @@ export const fetchFormData = async (
     apiUrl?: string
 ): Promise<FormSubmissionResult> => {
     try {
-        // You could use the apiUrl parameter to determine which endpoint to use
+
         const endpoint = apiUrl || `/api/forms/${formId}`;
         console.log(`Would fetch form data from endpoint: ${endpoint}`);
 
-        // Simulating a network request
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Simulated response - in a real app, this would come from the API
         return {
             success: true,
-            data: {} // Empty data as placeholder
+            data: {}
         };
     } catch (error) {
         console.error('Error fetching form data:', error);
@@ -52,11 +50,9 @@ export const submitFormData = async (
     try {
         console.log('Form submitted successfully:', formData);
 
-        // You could use the apiUrl parameter to determine which endpoint to use
         const endpoint = apiUrl || '/api/products';
         console.log(`Would submit to endpoint: ${endpoint}`);
 
-        // Simulating a network request
         await new Promise(resolve => setTimeout(resolve, 500));
 
         return {
